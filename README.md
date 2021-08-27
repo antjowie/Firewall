@@ -13,7 +13,7 @@ Survive as long as possible against the hordes of bugs trying to eliminate you.
 ## Tasks
 * [X] Level
 * [X] Moveable entity
-* [] Shooting
+* [X] Shooting
 * [] Enemy
 * [] Damage
 * [] Spawner

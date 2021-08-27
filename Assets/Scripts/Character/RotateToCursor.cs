@@ -24,15 +24,16 @@ public class RotateToCursorSystem : SystemBase
         if (!hit) targetPos = ray.origin + ray.direction * Vector3.Magnitude(Camera.main.transform.position);
 
         float dt = Time.DeltaTime;
-        //Debug.DrawLine(ray.origin, targetPos, Color.red, dt);
 
+        /**
+         * We need to inverse the mesh rotation with the parent rotation
+         * since otherwise we would apply 2 rotations (moveable and this rotation).
+         * A better solution would be to generate a forward rot dir only on the xz plane
+         */
         Entities
             .WithAll<RotateToCursorTag>()
             .ForEach((ref Rotation rot, in LocalToWorld ltw, in Parent parent) =>
             {
-                var parentRot = EntityManager.GetComponentData<Rotation>(parent.Value).Value;
-                parentRot = math.inverse(parentRot);
-
                 // We calulate the direction to the target.
                 // Since I'm rotating usting LookAt, I need to create a forward vector
                 var up = math.normalize(ltw.Position);
@@ -52,6 +53,10 @@ public class RotateToCursorSystem : SystemBase
                     math.normalize(toTarget),
                     up
                     );
+
+                // Kinda hacky... Inverse the mesh rotation that then gets reapplied by the system later
+                var parentRot = EntityManager.GetComponentData<Rotation>(parent.Value).Value;
+                parentRot = math.inverse(parentRot);
 
                 rot.Value = math.mul(parentRot, rot.Value);
             })
