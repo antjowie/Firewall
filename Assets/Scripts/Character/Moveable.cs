@@ -30,7 +30,8 @@ public class MoveableSystem : SystemBase
         Entities
             .ForEach((ref Translation pos, ref Rotation rot, in MoveableState move, in LocalToWorld ltw) =>
             {
-                var radius = 13f;
+                // This magic value is the radius of the sphere in the level
+                var radius = 21f;
 
                 /**
                  * Rotate the entity around its own center
