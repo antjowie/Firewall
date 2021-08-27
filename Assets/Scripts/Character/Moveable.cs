@@ -20,6 +20,7 @@ public struct MoveableState : IComponentData
     public float degreesPerSecond;
 }
 
+[UpdateInGroup(typeof(TransformSystemGroup))]
 public class MoveableSystem : SystemBase
 {
     protected override void OnUpdate()

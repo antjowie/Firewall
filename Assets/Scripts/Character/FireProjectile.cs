@@ -38,7 +38,7 @@ public class FireProjectile : MonoBehaviour, IConvertGameObjectToEntity, IDeclar
     }
 }
 
-[UpdateAfter(typeof(MoveableSystem))]
+[UpdateInGroup(typeof(LateSimulationSystemGroup))]
 public class FireProjectileSystem : SystemBase
 {
     EntityCommandBufferSystem Barrier;
@@ -55,13 +55,13 @@ public class FireProjectileSystem : SystemBase
         var dt = Time.DeltaTime;
 
         Entities
-            .ForEach((int entityInQueryIndex, ref FireProjectileData fireData, in Rotation rot) =>
+            .ForEach((int entityInQueryIndex, ref FireProjectileData fireData, in LocalToWorld ltw) =>
             {
                 if(fireData.isFiring && fireData.cooldown == 0)
                 {
                     var instance = ecb.Instantiate(entityInQueryIndex, fireData.projectilePrefab);
-
-                    ecb.SetComponent(entityInQueryIndex, instance, rot);
+                    
+                    ecb.SetComponent(entityInQueryIndex, instance, new Rotation { Value = ltw.Rotation });
                     ecb.SetComponent(entityInQueryIndex, instance, new MoveableState
                     {
                         degreesPerSecond = fireData.degreesPerSecond,

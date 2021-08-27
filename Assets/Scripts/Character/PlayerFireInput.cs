@@ -4,8 +4,8 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 
-[UpdateBefore(typeof(FireProjectile))]
-public class PlayerFireInput : SystemBase
+[UpdateInGroup(typeof(InitializationSystemGroup))]
+public class PlayerFireInputSystem : SystemBase
 {
     protected override void OnUpdate()
     {
