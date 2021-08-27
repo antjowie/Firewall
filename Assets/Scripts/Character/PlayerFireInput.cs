@@ -4,17 +4,16 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 
-[UpdateBefore(typeof(MoveableSystem))]
-public class PlayerMoveInputSystem : SystemBase
+[UpdateBefore(typeof(FireProjectile))]
+public class PlayerFireInput : SystemBase
 {
     protected override void OnUpdate()
     {
         Entities
             .WithAll<PlayerTag>()
-            .ForEach((ref MoveableState move) =>
+            .ForEach((ref FireProjectileData fire) =>
             {
-                move.move.x = Input.GetAxisRaw("Horizontal");
-                move.move.y = Input.GetAxisRaw("Vertical");
+                fire.isFiring = Input.GetAxisRaw("Fire1") > 0.1f;
             })
             .WithoutBurst()
             .Run(); // I'm not sure if Unity's input system is thread safe

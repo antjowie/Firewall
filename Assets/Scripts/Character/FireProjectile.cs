@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Transforms;
 
 public struct FireProjectileData : IComponentData
 {
@@ -54,12 +55,13 @@ public class FireProjectileSystem : SystemBase
         var dt = Time.DeltaTime;
 
         Entities
-            .ForEach((int entityInQueryIndex, ref FireProjectileData fireData) =>
+            .ForEach((int entityInQueryIndex, ref FireProjectileData fireData, in Rotation rot) =>
             {
-                //if(fireData.isFiring && fireData.cooldown == 0)
+                if(fireData.isFiring && fireData.cooldown == 0)
                 {
                     var instance = ecb.Instantiate(entityInQueryIndex, fireData.projectilePrefab);
 
+                    ecb.SetComponent(entityInQueryIndex, instance, rot);
                     ecb.SetComponent(entityInQueryIndex, instance, new MoveableState
                     {
                         degreesPerSecond = fireData.degreesPerSecond,
