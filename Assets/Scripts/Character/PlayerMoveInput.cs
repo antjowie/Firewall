@@ -4,10 +4,6 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 
-/**
- * We modify the move data structure of Moveable. This 
- * 
- */
 [UpdateBefore(typeof(MoveableSystem))]
 public class PlayerMoveInputSystem : SystemBase
 {

@@ -17,8 +17,7 @@ public struct MoveableState : IComponentData
 {
     // The direction to move to along its local coordinate space
     public float2 move;
-    // How many degrees per second the entity can rotate
-    public float speed;
+    public float degreesPerSecond;
 }
 
 public class MoveableSystem : SystemBase
@@ -39,7 +38,7 @@ public class MoveableSystem : SystemBase
                  * we just use the up vector to set the position
                  */
                 {
-                    var deltaRot2D = math.normalizesafe(move.move) * math.radians(move.speed) * dt;
+                    var deltaRot2D = math.normalizesafe(move.move) * math.radians(move.degreesPerSecond) * dt;
                     var deltaRot = new float3(
                         deltaRot2D.y,
                         0,

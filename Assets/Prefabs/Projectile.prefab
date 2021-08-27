@@ -48,7 +48,7 @@ MonoBehaviour:
   move:
     x: 0
     y: 0
-  speed: 45
+  degreesPerSecond: 45
 --- !u!114 &1843932920458776926
 MonoBehaviour:
   m_ObjectHideFlags: 0
