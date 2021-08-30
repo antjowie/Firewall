@@ -14,8 +14,8 @@ Survive as long as possible against the hordes of bugs trying to eliminate you.
 * [X] Level
 * [X] Moveable entity
 * [X] Shooting
-* [] Enemy
-* [] Damage
+* [X] Enemy
+* [X] Damage
 * [] Spawner
 ### Stretch
 * [] Enemy movement behavior

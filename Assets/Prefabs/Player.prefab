@@ -331,12 +331,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_ShapeType: 3
   m_PrimitiveCenter:
-    x: 0.000000059604645
+    x: 0
     y: 0
-    z: 0.09643179
+    z: 0
   m_PrimitiveSize:
-    x: 1.1928641
-    y: 1.1928641
+    x: 1
+    y: 1
     z: 0.6
   m_PrimitiveOrientation:
     Value:
@@ -346,14 +346,14 @@ MonoBehaviour:
     RotationOrder: 4
   m_Capsule:
     Height: 0.6
-    Radius: 0.59643203
+    Radius: 0.5
     Axis: 2
   m_Cylinder:
     Height: 0.6
-    Radius: 0.59643203
+    Radius: 0.5
     Axis: 2
   m_CylinderSideCount: 20
-  m_SphereRadius: 0.59643203
+  m_SphereRadius: 0.5
   m_MinimumSkinnedVertexWeight: 0.1
   m_ConvexHullGenerationParameters:
     m_SimplificationTolerance: 0.01789296
@@ -534,3 +534,5 @@ MonoBehaviour:
   projectilePrefab: {fileID: 1843932920458776927, guid: 9565142fb1115a74ba94046992cc0d25, type: 3}
   degreesPerSecond: 45
   fireRate: 1000
+  collidesWith: 1
+  isFiring: 0

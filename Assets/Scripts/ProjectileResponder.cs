@@ -61,7 +61,7 @@ public class ProjectileResponderSystem : SystemBase
 
             ProjectileResponderGroup[triggerEvent.EntityA] = entityA;
             ProjectileResponderGroup[triggerEvent.EntityB] = entityB;
-
+            
             if (entityA.life <= 0)
             {
                 // Since the collision mesh is on the MeshOrientation, we want to get the root

@@ -38,6 +38,9 @@ public class FireAbility : MonoBehaviour, IConvertGameObjectToEntity, IDeclareRe
     public float degreesPerSecond;
     public float fireRate;
 
+    public bool isFiring;
+
+
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
         dstManager.AddComponentData(entity, new FireAbilityData
@@ -45,6 +48,8 @@ public class FireAbility : MonoBehaviour, IConvertGameObjectToEntity, IDeclareRe
             projectilePrefab = conversionSystem.GetPrimaryEntity(projectilePrefab),
             degreesPerSecond = degreesPerSecond,
             fireRate = fireRate,
+
+            isFiring = isFiring,
         });
     }
 
@@ -75,35 +80,44 @@ public class FireProjectileSystem : SystemBase
         Entities
             .ForEach((Entity entity, int entityInQueryIndex, ref FireAbilityData fireData, in LocalToWorld ltw) =>
             {
-                // Quite an ugly work around, but we need the root collider
-                // I made a mistake where I childed gameobjects for the player
-                // but when designing things in an ECS way, you shouldn't think like that
-                // since entities should not really rely on other entities to work well
-                Entity root = entity;
 
-                while(HasComponent<Parent>(root))
+                if (fireData.isFiring && fireData.cooldown == 0)
                 {
-                    root = GetComponent<Parent>(root).Value;
-                }
+                    // Quite an ugly work around, but we need the root collider
+                    // I made a mistake where I childed gameobjects for the player
+                    // but when designing things in an ECS way, you shouldn't think like that
+                    // since entities should not really rely on other entities to work well
+                    Entity root = entity;
 
-                if(fireData.isFiring && fireData.cooldown == 0)
-                {
-                    for(int i = 0; i < 10; i++)
+                    while (HasComponent<Parent>(root) && !HasComponent<PhysicsCollider>(root))
                     {
-                        var instance = ecb.Instantiate(entityInQueryIndex, fireData.projectilePrefab);
-                    
-                        ecb.SetComponent(entityInQueryIndex, instance, new Rotation { Value = ltw.Rotation });
-                        ecb.SetComponent(entityInQueryIndex, instance, new MoveAbilityData
+                        root = GetComponent<Parent>(root).Value;
+                    }
+                    if (HasComponent<PhysicsCollider>(root))
+                    {
+
+                        for (int i = 0; i < 10; i++)
                         {
-                            degreesPerSecond = fireData.degreesPerSecond,
-                            move = new float2(rand.NextFloat(-0.5f,0.5f), 1),
-                            //move = new float2(0, 1),
+                            var instance = ecb.Instantiate(entityInQueryIndex, fireData.projectilePrefab);
 
-                        });
+                            ecb.SetComponent(entityInQueryIndex, instance, new Rotation { Value = ltw.Rotation });
+                            ecb.SetComponent(entityInQueryIndex, instance, new MoveAbilityData
+                            {
+                                degreesPerSecond = fireData.degreesPerSecond,
+                                move = new float2(rand.NextFloat(-0.5f, 0.5f), 1),
+                                //move = new float2(0, 1),
+                            });
 
-                        var projectileCollider = GetComponent<PhysicsCollider>(fireData.projectilePrefab);
-                        projectileCollider.Value.Value.Filter = GetComponent<PhysicsCollider>(root).Value.Value.Filter;
-                        ecb.SetComponent(entityInQueryIndex, instance, projectileCollider);
+                            var projectileCollider = GetComponent<PhysicsCollider>(fireData.projectilePrefab);
+                            var parentCollider = GetComponent<PhysicsCollider>(root);
+                            projectileCollider.Value.Value.Filter = parentCollider.Value.Value.Filter;
+
+                            ecb.SetComponent(entityInQueryIndex, instance, projectileCollider);
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError("FireAbility is missing a parent with a collider and can't infer collision filter");
                     }
 
                     fireData.cooldown = 1f / fireData.fireRate;
@@ -111,7 +125,9 @@ public class FireProjectileSystem : SystemBase
 
                 fireData.cooldown = math.max(0, fireData.cooldown - dt);
             })
+            .WithoutBurst()
             .ScheduleParallel();
+        //.Schedule();
 
         Barrier.AddJobHandleForProducer(Dependency);
     }
