@@ -13,7 +13,7 @@ using UnityEngine;
  */
 
 [GenerateAuthoringComponent]
-public struct MoveableState : IComponentData
+public struct MoveAbilityData : IComponentData
 {
     // The direction to move to along its local coordinate space
     public float2 move;
@@ -21,14 +21,14 @@ public struct MoveableState : IComponentData
 }
 
 [UpdateInGroup(typeof(TransformSystemGroup))]
-public class MoveableSystem : SystemBase
+public class MoveAbilitySystem : SystemBase
 {
     protected override void OnUpdate()
     {
         float dt = Time.DeltaTime;
 
         Entities
-            .ForEach((ref Translation pos, ref Rotation rot, in MoveableState move, in LocalToWorld ltw) =>
+            .ForEach((ref Translation pos, ref Rotation rot, in MoveAbilityData move, in LocalToWorld ltw) =>
             {
                 // This magic value is the radius of the sphere in the level
                 var radius = 21f;

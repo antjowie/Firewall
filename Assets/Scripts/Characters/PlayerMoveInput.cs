@@ -12,7 +12,7 @@ public class PlayerMoveInputSystem : SystemBase
     {
         Entities
             .WithAll<PlayerTag>()
-            .ForEach((ref MoveableState move, ref Rotation rot, ref Translation pos) =>
+            .ForEach((ref MoveAbilityData move, ref Rotation rot, ref Translation pos) =>
             {
                 var inverseRot = math.inverse(rot.Value);
 

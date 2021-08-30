@@ -11,7 +11,7 @@ public class PlayerFireInputSystem : SystemBase
     {
         Entities
             .WithAll<PlayerTag>()
-            .ForEach((ref FireProjectileData fire) =>
+            .ForEach((ref FireAbilityData fire) =>
             {
                 fire.isFiring = Input.GetAxisRaw("Fire1") > 0.1f;
             })
