@@ -125,10 +125,8 @@ public class FireProjectileSystem : SystemBase
 
                 fireData.cooldown = math.max(0, fireData.cooldown - dt);
             })
-            .WithoutBurst()
             .ScheduleParallel();
-        //.Schedule();
-
+        
         Barrier.AddJobHandleForProducer(Dependency);
     }
 }
