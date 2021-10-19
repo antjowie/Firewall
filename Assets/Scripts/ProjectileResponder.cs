@@ -23,63 +23,86 @@ public struct ProjectileResponderData : IComponentData
 [UpdateAfter(typeof(EndFramePhysicsSystem))]
 public class ProjectileResponderSystem : SystemBase
 {
-    BuildPhysicsWorld BuildPhysicsWorldSystem;
-    StepPhysicsWorld StepPhysicsWorldSystem;
-    EntityQuery ProjectileResponderGroup;
-    EntityCommandBufferSystem Barrier;
+    BuildPhysicsWorld buildPhysicsWorldSystem;
+    StepPhysicsWorld stepPhysicsWorldSystem;
+    EntityQuery projectileResponderGroup;
+    EntityCommandBufferSystem barrier;
 
     protected override void OnCreate()
     {
-        BuildPhysicsWorldSystem = World.GetOrCreateSystem<BuildPhysicsWorld>();
-        StepPhysicsWorldSystem = World.GetOrCreateSystem<StepPhysicsWorld>();
-        ProjectileResponderGroup = GetEntityQuery(new EntityQueryDesc
+        buildPhysicsWorldSystem = World.GetOrCreateSystem<BuildPhysicsWorld>();
+        stepPhysicsWorldSystem = World.GetOrCreateSystem<StepPhysicsWorld>();
+        projectileResponderGroup = GetEntityQuery(new EntityQueryDesc
         {
             All = new ComponentType[]
             {
                 typeof(ProjectileResponderData)
             }
         });
-        Barrier = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
+        barrier = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
     }
 
-    [BurstCompile]
+    //[BurstCompile]
     struct ProjectileResponderJob : ITriggerEventsJob
     {
-        public ComponentDataFromEntity<ProjectileResponderData> ProjectileResponderGroup;
-        [ReadOnly] public ComponentDataFromEntity<Parent> ParentGroup;
+        public ComponentDataFromEntity<ProjectileResponderData> projectileResponderGroup;
+        [ReadOnly] public ComponentDataFromEntity<Parent> parentGroup;
+        [ReadOnly] public ComponentDataFromEntity<ProjectileInstigatorData> instigatorGroup;
         //[ReadOnly] public ComponentDataFromEntity<PlayerTag> PlayerTagGroup;
-        public EntityCommandBuffer Ecb;
+        public EntityCommandBuffer ecb;
 
         public void Execute(TriggerEvent triggerEvent)
         {
-            var entityA = ProjectileResponderGroup[triggerEvent.EntityA];
-            var entityB = ProjectileResponderGroup[triggerEvent.EntityB];
+            var entityA = triggerEvent.EntityA;
+            var entityB = triggerEvent.EntityB;
+
+            var responderA = projectileResponderGroup[triggerEvent.EntityA];
+            var responderB = projectileResponderGroup[triggerEvent.EntityB];
+
+            // Check if we have to do collision response
+            if (responderA.life <= 0 || responderB.life <= 0) return;
+            if (instigatorGroup.HasComponent(entityA) && instigatorGroup[entityA].instigator == entityB)
+            {
+                Debug.LogWarning($"Entity A collided with instigator");
+                return;
+            }
+            if (instigatorGroup.HasComponent(entityB) && instigatorGroup[entityB].instigator == entityA)
+            {
+                Debug.LogWarning($"Entity B collided with instigator");
+                return;
+            }
 
             // Adjust the life of both components
-            entityA.life -= entityB.damage;
-            entityB.life -= entityA.damage;
+            responderA.life -= responderB.damage;
+            responderB.life -= responderA.damage;
 
-            ProjectileResponderGroup[triggerEvent.EntityA] = entityA;
-            ProjectileResponderGroup[triggerEvent.EntityB] = entityB;
-            
-            if (entityA.life <= 0)
+            projectileResponderGroup[entityA] = responderA;
+            projectileResponderGroup[entityB] = responderB;
+
+            Debug.Log($"Collision! " +
+                $"A life {responderA.life} dmg {responderA.damage} | " +
+                $"B life {responderB.life} dmg {responderB.damage}");
+
+            if (responderA.life <= 0)
             {
+                Debug.Log("Entity A died");
                 // Since the collision mesh is on the MeshOrientation, we want to get the root
                 // This is a design flaw, but it works for this project
                 // It has to be on the MeshOrientation since FireAbility uses that rotation to orient 
                 // projectiles, but it also requires access to the physics group to know who it belongs to
                 // and who to ignore
-                var parent = triggerEvent.EntityA;
-                while (ParentGroup.HasComponent(parent))
-                    parent = ParentGroup[parent].Value;
-                Ecb.DestroyEntity(parent);
+                var parent = entityA;
+                while (parentGroup.HasComponent(parent))
+                    parent = parentGroup[parent].Value;
+                ecb.DestroyEntity(parent);
             }
-            if (entityB.life <= 0)
+            if (responderB.life <= 0)
             {
-                var parent = triggerEvent.EntityB;
-                while (ParentGroup.HasComponent(parent))
-                    parent = ParentGroup[parent].Value;
-                Ecb.DestroyEntity(parent);
+                Debug.Log("Entity B died");
+                var parent = entityB;
+                while (parentGroup.HasComponent(parent))
+                    parent = parentGroup[parent].Value;
+                ecb.DestroyEntity(parent);
             }
 
         }
@@ -87,19 +110,20 @@ public class ProjectileResponderSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        if (ProjectileResponderGroup.CalculateEntityCount() == 0)
+        if (projectileResponderGroup.CalculateEntityCount() == 0)
         {
             return;
         }
-
+        
         Dependency = new ProjectileResponderJob
         {
-            ProjectileResponderGroup = GetComponentDataFromEntity<ProjectileResponderData>(),
-            ParentGroup = GetComponentDataFromEntity<Parent>(true),
-            Ecb = Barrier.CreateCommandBuffer(),
-        }.Schedule(StepPhysicsWorldSystem.Simulation,
-            ref BuildPhysicsWorldSystem.PhysicsWorld, Dependency);
+            projectileResponderGroup = GetComponentDataFromEntity<ProjectileResponderData>(),
+            parentGroup = GetComponentDataFromEntity<Parent>(true),
+            instigatorGroup = GetComponentDataFromEntity<ProjectileInstigatorData>(true),
+            ecb = barrier.CreateCommandBuffer(),
+        }.Schedule(stepPhysicsWorldSystem.Simulation,
+            ref buildPhysicsWorldSystem.PhysicsWorld, Dependency);
 
-        Barrier.AddJobHandleForProducer(Dependency);
+        barrier.AddJobHandleForProducer(Dependency);
     }
 }

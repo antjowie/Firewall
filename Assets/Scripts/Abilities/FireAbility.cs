@@ -26,10 +26,17 @@ public struct FireAbilityData : IComponentData
     public Entity projectilePrefab;
     public float degreesPerSecond;
     public float fireRate;
+    public float fireCount;
+    public float spreadPercent;
 
     public bool isFiring;
 
     internal float cooldown;
+}
+
+public struct ProjectileInstigatorData : IComponentData
+{
+    public Entity instigator;
 }
 
 public class FireAbility : MonoBehaviour, IConvertGameObjectToEntity, IDeclareReferencedPrefabs
@@ -37,6 +44,8 @@ public class FireAbility : MonoBehaviour, IConvertGameObjectToEntity, IDeclareRe
     public GameObject projectilePrefab;
     public float degreesPerSecond;
     public float fireRate;
+    public float fireCount;
+    public float spreadPercent; // How much a fired projectile can spread to the sides. A value of 1 means the projectile flies parallel
 
     public bool isFiring;
 
@@ -48,6 +57,8 @@ public class FireAbility : MonoBehaviour, IConvertGameObjectToEntity, IDeclareRe
             projectilePrefab = conversionSystem.GetPrimaryEntity(projectilePrefab),
             degreesPerSecond = degreesPerSecond,
             fireRate = fireRate,
+            spreadPercent = spreadPercent,
+            fireCount = fireCount,
 
             isFiring = isFiring,
         });
@@ -93,10 +104,20 @@ public class FireProjectileSystem : SystemBase
                     {
                         root = GetComponent<Parent>(root).Value;
                     }
+
+                    var projectileCollider = GetComponent<PhysicsCollider>(fireData.projectilePrefab);
                     if (HasComponent<PhysicsCollider>(root))
                     {
+                        var parentCollider = GetComponent<PhysicsCollider>(root);
+                        projectileCollider.Value.Value.Filter = parentCollider.Value.Value.Filter;
+                    }
+                    else
+                    {
+                        projectileCollider.Value.Value.Filter = CollisionFilter.Default;
+                        //Debug.LogError("FireAbility is missing a parent with a collider and can't infer collision filter");
+                    }
 
-                        for (int i = 0; i < 10; i++)
+                    for (int i = 0; i < fireData.fireCount; i++)
                         {
                             var instance = ecb.Instantiate(entityInQueryIndex, fireData.projectilePrefab);
 
@@ -104,21 +125,14 @@ public class FireProjectileSystem : SystemBase
                             ecb.SetComponent(entityInQueryIndex, instance, new MoveAbilityData
                             {
                                 degreesPerSecond = fireData.degreesPerSecond,
-                                move = new float2(rand.NextFloat(-0.5f, 0.5f), 1),
+                                move = new float2(rand.NextFloat(-fireData.spreadPercent, fireData.spreadPercent), 1),
+                                //move = new float2(rand.NextFloat(-0.5f,0.5f), 1),
                                 //move = new float2(0, 1),
                             });
 
-                            var projectileCollider = GetComponent<PhysicsCollider>(fireData.projectilePrefab);
-                            var parentCollider = GetComponent<PhysicsCollider>(root);
-                            projectileCollider.Value.Value.Filter = parentCollider.Value.Value.Filter;
-
                             ecb.SetComponent(entityInQueryIndex, instance, projectileCollider);
+                            ecb.AddComponent(entityInQueryIndex, instance, new ProjectileInstigatorData { instigator = entity });
                         }
-                    }
-                    else
-                    {
-                        Debug.LogError("FireAbility is missing a parent with a collider and can't infer collision filter");
-                    }
 
                     fireData.cooldown = 1f / fireData.fireRate;
                 }

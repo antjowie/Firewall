@@ -1,6 +1,8 @@
 ## Concept
 > Heavily inspired from Super Stardust (PS3, A top down arena game made with Unity's DOTS)
-Survive as long as possible against the hordes of bugs trying to eliminate you.
+
+### Survive as long as possible against the hordes of bugs trying to eliminate you!
+![showcase](Showcase.gif)
 
 ## Features
 * Movement around a spherical surface with the ability to dash

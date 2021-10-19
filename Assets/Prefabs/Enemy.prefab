@@ -239,7 +239,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 130fad74f58847541bcb4063b6ed8dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  life: 50
+  life: 10
   damage: 1
 --- !u!114 &4097327885260721175
 MonoBehaviour:
@@ -481,6 +481,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   projectilePrefab: {fileID: 1843932920458776927, guid: 9565142fb1115a74ba94046992cc0d25, type: 3}
   degreesPerSecond: 45
-  fireRate: 1
-  collidesWith: 0
+  fireRate: 0.3
+  fireCount: 1
+  spreadPercent: 0
   isFiring: 1
